@@ -4,7 +4,6 @@ use failure::{format_err, Error};
 use ff::Field;
 use paired::bls12_381::{Bls12, Fq12, G1Affine, G2Affine, G2Compressed, G2};
 use paired::{CurveAffine, CurveProjective, EncodedPoint, Engine};
-use rayon::prelude::*;
 
 use crate::key::*;
 
@@ -50,16 +49,10 @@ pub fn hash(msg: &[u8]) -> G2 {
 /// Aggregate signatures by multiplying them together.
 /// Calculated by `signature = \sum_{i = 0}^n signature_i`.
 pub fn aggregate(signatures: &[Signature]) -> Signature {
-    let res = signatures
-        .into_par_iter()
-        .fold(G2::zero, |mut acc, signature| {
-            acc.add_assign(&signature.0.into_projective());
-            acc
-        })
-        .reduce(G2::zero, |mut acc, val| {
-            acc.add_assign(&val);
-            acc
-        });
+    let res = signatures.iter().fold(G2::zero(), |mut acc, signature| {
+        acc.add_assign(&signature.0.into_projective());
+        acc
+    });
 
     Signature(res.into_affine())
 }
@@ -72,8 +65,8 @@ pub fn verify(signature: &Signature, hashes: &[G2], public_keys: &[PublicKey]) -
     }
 
     let mut prepared: Vec<_> = public_keys
-        .par_iter()
-        .zip(hashes.par_iter())
+        .iter()
+        .zip(hashes.iter())
         .map(|(pk, h)| (pk.as_affine().prepare(), h.into_affine().prepare()))
         .collect();
 

@@ -8,15 +8,9 @@ edition = "2018"
 [dependencies]
 ff = "0.4"
 rand = "0.4"
-rayon = "1"
 byteorder = "1.2"
 failure = "0.1"
 paired = "^0.15.0"
-
-[workspace]
-members = [
-  "bls-signatures-ffi",
-]
 
 [features]
 default = []
